@@ -14,12 +14,12 @@ HealthESP.playerColors = {}
 
 local function DrawHealthBar()
 	local bar = Drawing.new("Square")
-	
+
 	bar.Visible = false
 	bar.Filled = true
 	bar.Thickness = 1
 	bar.Transparency = 1
-	
+
 	return bar
 end
 
@@ -50,10 +50,10 @@ end
 
 local function RemoveESP(target)
 	local data = HealthESP.espData[target]
-	
+
 	if data then
 		if data.bar then data.bar:Remove() end
-		
+
 		HealthESP.espData[target] = nil
 	end
 end
@@ -63,7 +63,7 @@ runService.RenderStepped:Connect(function()
 		for _, data in next, HealthESP.espData do
 			if data.bar then data.bar.Visible = false end
 		end
-		
+
 		return
 	end
 
@@ -77,6 +77,10 @@ runService.RenderStepped:Connect(function()
 				data.bar.Visible = false
 				continue
 			end
+			
+			local dist = (camera.CFrame.Position - rootPosition).Magnitude
+			
+			local scale = math.clamp(1 / (dist / 50), 0.5, 2.0)
 
 			local healthPercent = math.clamp(data.humanoid.Health / data.humanoid.MaxHealth, 0, 1)
 			
@@ -86,15 +90,28 @@ runService.RenderStepped:Connect(function()
 			else
 				color = Color3.fromRGB(255 * (1 - healthPercent), 255 * healthPercent, 0)
 			end
-
-			local barWidth = 3
-			local barHeight = 100
 			
-			local barX = screenPosition.X + 20
-			local barY = screenPosition.Y - barHeight / 2
+			local baseBarWidth = 3
+			local baseBarHeight = 100
 
-			data.bar.Position = Vector2.new(barX, barY + (1 - healthPercent) * barHeight)
-			data.bar.Size = Vector2.new(barWidth, barHeight * healthPercent)
+			local barWidth = baseBarWidth * scale
+			local barHeight = baseBarHeight * scale
+			
+			local offset = 20 * scale
+			local barX = screenPosition.X + offset
+			
+			local barTopY = screenPosition.Y - barHeight / 2 
+			
+			data.bar.Position = Vector2.new(
+				barX, 
+				barTopY + (1 - healthPercent) * barHeight
+			)
+			
+			data.bar.Size = Vector2.new(
+				barWidth, 
+				barHeight * healthPercent
+			)
+
 			data.bar.Color = color
 			data.bar.Visible = true
 		end
