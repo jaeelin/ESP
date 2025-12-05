@@ -68,10 +68,6 @@ function SkeletonESP.SetColor(player, color)
 	SkeletonESP.playerColors[player] = color
 end
 
-function SkeletonESP.SetRainbow(state)
-	SkeletonESP.rainbow = state
-end
-
 function SkeletonESP.DrawESP(target)
 	if target == player then return end
 	
@@ -97,7 +93,7 @@ runService.RenderStepped:Connect(function()
 			SkeletonESP.RemovePlayer(player)
 		else
 			local color = SkeletonESP.playerColors[player] or SkeletonESP.defaultColor
-			if SkeletonESP.rainbow then
+			if SkeletonESP.rainbowEnabled then
 				color = Color3.fromHSV(tick() % 1, 1, 1)
 			end
 
