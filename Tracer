@@ -1,0 +1,103 @@
+local playerService = game:GetService("Players")
+local runService = game:GetService("RunService")
+
+local clientPlayer = playerService.LocalPlayer
+local camera = workspace.CurrentCamera
+
+local TracerESP = {}
+TracerESP.version = 1.0
+TracerESP.espData = {}
+TracerESP.enabled = false
+TracerESP.defaultColor = Color3.fromRGB(255, 0, 0)
+TracerESP.rainbowEnabled = false
+TracerESP.playerColors = {}
+
+local function DrawTracer()
+	local line = Drawing.new("Line")
+	
+	line.Visible = false
+	line.Color = Color3.fromRGB(255, 0, 0)
+	line.Thickness = 2
+	line.Transparency = 1
+	
+	return line
+end
+
+function TracerESP.SetColor(player, color)
+	TracerESP.playerColors[player] = color
+end
+
+function TracerESP.Toggle(state)
+	TracerESP.enabled = state
+	
+	for _, data in next, TracerESP.espData do
+		data.tracer.Visible = TracerESP.enabled
+	end
+end
+
+function TracerESP.DrawESP(target)
+	if target == clientPlayer then return end
+
+	local character = target.Character or target.CharacterAdded:Wait()
+	if not character then return end
+
+	local humanoid = character:WaitForChild("Humanoid")
+	
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	if not rootPart then return end
+
+	local tracer = DrawTracer()
+	TracerESP.espData[target] = {character = character, humanoid = humanoid, rootPart = rootPart, tracer = tracer}
+end
+
+local function RemoveESP(target)
+	local data = TracerESP.espData[target]
+	
+	if data then
+		if data.tracer then data.tracer:Remove() end
+		TracerESP.espData[target] = nil
+	end
+end
+
+runService.RenderStepped:Connect(function()
+	if not TracerESP.enabled then
+		for _, data in next, TracerESP.espData do
+			if data.tracer then data.tracer.Visible = false end
+		end
+		
+		return
+	end
+
+	local clientHumanoidRootPart = clientPlayer.Character and clientPlayer.Character:FindFirstChild("HumanoidRootPart")
+	if not clientHumanoidRootPart then return end
+
+	local localScreenPosition, localOnScreen = camera:WorldToViewportPoint(clientHumanoidRootPart.Position)
+
+	for player, data in next, TracerESP.espData do
+		if not data.humanoid.Parent or data.humanoid.Health <= 0 then
+			RemoveESP(player)
+		else
+			local targetScreenPosition, onScreen = camera:WorldToViewportPoint(data.rootPart.Position)
+			local color = TracerESP.playerColors[player] or TracerESP.defaultColor
+			
+			if TracerESP.rainbowEnabled then
+				color = Color3.fromHSV((tick() / 3) % 1, 1, 1)
+			end
+
+			data.tracer.From = Vector2.new(localScreenPosition.X, localScreenPosition.Y)
+			data.tracer.To = Vector2.new(targetScreenPosition.X, targetScreenPosition.Y)
+			data.tracer.Color = color
+			data.tracer.Visible = onScreen and localOnScreen
+		end
+	end
+end)
+
+playerService.PlayerRemoving:Connect(RemoveESP)
+
+for _, player in next, playerService:GetPlayers() do
+	TracerESP.DrawESP(player)
+end
+
+playerService.PlayerAdded:Connect(TracerESP.DrawESP)
+
+return TracerESP
