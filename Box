@@ -62,37 +62,42 @@ local function RemoveESP(target)
 end
 
 runService.RenderStepped:Connect(function()
-	if not BoxESP.enabled then return end
+	if not BoxESP.enabled then
+		for _, data in next, BoxESP.espData do
+			if data.box then
+				data.box.Visible = false
+			end
+		end
+		
+		return
+	end
 
 	for player, data in next, BoxESP.espData do
 		if not data.humanoid.Parent or data.humanoid.Health <= 0 then
 			RemoveESP(player)
 		else
+			local rootPos = data.rootPart.Position
+			local screenPos, onScreen = camera:WorldToViewportPoint(rootPos)
 			local color = BoxESP.playerColors[player] or BoxESP.defaultColor
+
 			if BoxESP.rainbowEnabled then
 				color = Color3.fromHSV(tick() % 1, 1, 1)
 			end
+			
+			local dist = (camera.CFrame.Position - rootPos).Magnitude
+			local scale = math.clamp(1 / (dist / 50), 0.5, 1.5)
+
+			local targetSize = Vector2.new(50, 100) * scale
+			local targetPos = Vector2.new(
+				screenPos.X - targetSize.X / 2,
+				screenPos.Y - targetSize.Y / 2
+			)
+			
+			data.box.Position = data.box.Position:Lerp(targetPos, 0.25)
+			data.box.Size = data.box.Size:Lerp(targetSize, 0.25)
 
 			data.box.Color = color
-			
-			local topPosition, onTop = camera:WorldToViewportPoint(data.rootPart.Position + Vector3.new(0, data.humanoid.HipHeight + 2, 0))
-			local bottomPosition, onBottom = camera:WorldToViewportPoint(data.rootPart.Position - Vector3.new(0, data.humanoid.HipHeight, 0))
-
-			if onTop and onBottom then
-				local height = bottomPosition.Y - topPosition.Y
-
-				local rightVector = data.rootPart.CFrame.RightVector * 1.5
-				local rightPosition, onRight = camera:WorldToViewportPoint(data.rootPart.Position + rightVector)
-
-				local halfWidth = math.abs(rightPosition.X - topPosition.X)
-				local width = math.abs(rightPosition.X - topPosition.X) * 2
-
-				data.box.Position = Vector2.new(topPosition.X - halfWidth, topPosition.Y)
-				data.box.Size = Vector2.new(width, height)
-				data.box.Visible = true
-			else
-				data.box.Visible = false
-			end
+			data.box.Visible = onScreen
 		end
 	end
 end)
