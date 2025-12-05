@@ -6,7 +6,7 @@ local clientPlayer = playerService.LocalPlayer
 local camera = workspace.CurrentCamera
 
 local BoxESP = {}
-BoxESP.version = 1.1
+BoxESP.version = 1.2
 BoxESP.espData = {}
 BoxESP.enabled = false
 BoxESP.defaultColor = Color3.fromRGB(255, 0, 0)
@@ -82,7 +82,7 @@ runService.RenderStepped:Connect(function()
 			local color = BoxESP.playerColors[player] or BoxESP.defaultColor
 
 			if BoxESP.rainbowEnabled then
-				color = Color3.fromHSV(tick() % 1, 1, 1)
+				color = Color3.fromHSV((tick() / 3) % 1, 1, 1)
 			end
 			
 			local dist = (camera.CFrame.Position - rootPos).Magnitude
