@@ -7,6 +7,7 @@ local clientPlayer = playerService.LocalPlayer
 local camera = workspace.CurrentCamera
 
 local SkeletonESP = {}
+SkeletonESP.version = 1.0
 SkeletonESP.espData = {}
 SkeletonESP.enabled = false
 SkeletonESP.defaultColor = Color3.fromRGB(255, 0, 0)
@@ -15,6 +16,7 @@ SkeletonESP.playerColors = {}
 
 local function DrawLine()
 	local line = Drawing.new("Line")
+	
 	line.Visible = false
 	line.Thickness = 1
 	line.Color = Color3.fromRGB(255, 0, 0)
