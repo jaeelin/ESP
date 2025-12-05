@@ -6,6 +6,7 @@ local clientPlayer = playerService.LocalPlayer
 local camera = workspace.CurrentCamera
 
 local BoxESP = {}
+BoxESP.version = 1.0
 BoxESP.espData = {}
 BoxESP.enabled = false
 BoxESP.defaultColor = Color3.fromRGB(255, 0, 0)
@@ -93,8 +94,8 @@ runService.RenderStepped:Connect(function()
 				screenPos.Y - targetSize.Y / 2
 			)
 			
-			data.box.Position = data.box.Position:Lerp(targetPos, 0.25)
-			data.box.Size = data.box.Size:Lerp(targetSize, 0.25)
+			data.box.Position = targetPos
+			data.box.Size = targetSize
 
 			data.box.Color = color
 			data.box.Visible = onScreen
