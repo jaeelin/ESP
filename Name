@@ -5,7 +5,7 @@ local clientPlayer = playerService.LocalPlayer
 local camera = workspace.CurrentCamera
 
 local NameESP = {}
-NameESP.version = 1.0
+NameESP.version = 1.1
 NameESP.espData = {}
 NameESP.enabled = false
 NameESP.defaultColor = Color3.fromRGB(255, 0, 0)
@@ -84,9 +84,8 @@ runService.RenderStepped:Connect(function()
 			if NameESP.rainbowEnabled then
 				color = Color3.fromHSV(tick() % 1, 1, 1)
 			end
-
-			local targetPos = Vector2.new(screenPos.X, screenPos.Y)
-			data.name.Position = data.name.Position:Lerp(targetPos, 0.5)
+			
+			data.name.Position = Vector2.new(screenPos.X, screenPos.Y)
 			data.name.Color = color
 			data.name.Visible = onScreen
 			
