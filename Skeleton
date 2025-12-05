@@ -2,7 +2,7 @@ local playerService = game:GetService("Players")
 local runService = game:GetService("RunService")
 local userInputService = game:GetService("UserInputService")
 
-local player = playerService.LocalPlayer
+local clientPlayer = playerService.LocalPlayer
 
 local camera = workspace.CurrentCamera
 
@@ -67,7 +67,7 @@ function SkeletonESP.SetColor(player, color)
 end
 
 function SkeletonESP.DrawESP(target)
-	if target == player then return end
+	if target == clientPlayer then return end
 	
 	local character = target.Character or target.CharacterAdded:Wait()
 	if not character then return end
@@ -88,7 +88,7 @@ runService.RenderStepped:Connect(function()
 
 	for player, data in next, SkeletonESP.espData do
 		if not data.humanoid.Parent or data.humanoid.Health <= 0 then
-			SkeletonESP.RemovePlayer(player)
+			RemoveESP(player)
 		else
 			local color = SkeletonESP.playerColors[player] or SkeletonESP.defaultColor
 			if SkeletonESP.rainbowEnabled then
