@@ -1,0 +1,140 @@
+local playerService = game:GetService("Players")
+local runService = game:GetService("RunService")
+local userInputService = game:GetService("UserInputService")
+
+local player = playerService.LocalPlayer
+
+local camera = workspace.CurrentCamera
+
+local espData = {}
+
+local SkeletonESP = {}
+SkeletonESP.espData = {}
+SkeletonESP.enabled = true
+SkeletonESP.defaultColor = Color3.fromRGB(255, 0, 0)
+SkeletonESP.rainbowEnabled = false
+SkeletonESP.playerColors = {} 
+
+local function DrawLine()
+	local line = Drawing.new("Line")
+	line.Visible = false
+	line.Thickness = 1
+	line.Color = Color3.fromRGB(255, 0, 0)
+	line.Transparency = 1
+	
+	return line
+end
+
+local function ToggleESP(state)
+	enabled = state
+	
+	for _, data in next, espData do
+		for _, line in next, data.lines do
+			line.Visible = enabled
+		end
+	end
+end
+
+local function GetJoints(character)
+	local joints = {}
+
+	for _, obj in next, character:GetDescendants() do
+		if obj:IsA("Motor6D") then
+			if obj.Part0 and obj.Part1 then
+				joints[#joints + 1] = {
+					a = obj.Part0,
+					b = obj.Part1
+				}
+			end
+		end
+	end
+
+	return joints
+end
+
+local function RemoveESP(target)
+	local data = espData[target]
+	
+	if data then
+		for _, line in next, data.lines do
+			line:Remove()
+		end
+		
+		espData[target] = nil
+	end
+end
+
+function SkeletonESP.SetColor(player, color)
+	SkeletonESP.playerColors[player] = color
+end
+
+function SkeletonESP.SetRainbow(state)
+	SkeletonESP.rainbow = state
+end
+
+function SkeletonESP.DrawESP(target)
+	if target == player then return end
+	
+	local character = target.Character or target.CharacterAdded:Wait()
+	if not character then return end
+
+	local humanoid = character:WaitForChild("Humanoid")
+	local joints = GetJoints(character)
+
+	local lines = {}
+	for i = 1, #joints do
+		lines[i] = DrawLine()
+	end
+
+	espData[target] = {character = character, humanoid = humanoid, joints = joints, lines = lines}
+end
+
+runService.RenderStepped:Connect(function()
+	if not SkeletonESP.enabled then return end
+
+	for player, data in next, SkeletonESP.espData do
+		if not data.humanoid.Parent or data.humanoid.Health <= 0 then
+			SkeletonESP.RemovePlayer(player)
+		else
+			local color = SkeletonESP.playerColors[player] or SkeletonESP.defaultColor
+			if SkeletonESP.rainbow then
+				color = Color3.fromHSV(tick() % 1, 1, 1)
+			end
+
+			for _, joint in next, data.joints do
+				local partA = joint.a
+				local partB = joint.b
+				local line = data.lines[_]
+
+				if partA and partB then
+					local positionA, onScreenA = camera:WorldToViewportPoint(partA.Position)
+					local positionB, onScreenB = camera:WorldToViewportPoint(partB.Position)
+
+					line.Color = color
+
+					if onScreenA and onScreenB then
+						line.From = Vector2.new(positionA.X, positionA.Y)
+						line.To = Vector2.new(positionB.X, positionB.Y)
+						line.Visible = true
+					else
+						line.Visible = false
+					end
+				else
+					line.Visible = false
+				end
+			end
+		end
+	end
+end)
+
+playerService.PlayerRemoving:Connect(function(target)
+	RemoveESP(target)
+end)
+
+for _, player in next, playerService:GetPlayers() do
+	SkeletonESP.DrawESP(player)
+end
+
+playerService.PlayerAdded:Connect(SkeletonESP.DrawESP)
+
+return SkeletonESP
