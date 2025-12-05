@@ -1,0 +1,99 @@
+local playerService = game:GetService("Players")
+local runService = game:GetService("RunService")
+
+local clientPlayer = playerService.LocalPlayer
+
+local camera = workspace.CurrentCamera
+
+local BoxESP = {}
+BoxESP.espData = {}
+BoxESP.enabled = false
+BoxESP.defaultColor = Color3.fromRGB(255, 0, 0)
+BoxESP.rainbowEnabled = false
+BoxESP.playerColors = {}
+
+local function DrawBox()
+	local box = Drawing.new("Square")
+	
+	box.Visible = false
+	box.Color = Color3.fromRGB(255,0,0)
+	box.Thickness = 2
+	box.Transparency = 1
+	box.Filled = false
+	
+	return box
+end
+
+function BoxESP.SetColor(player, color)
+	BoxESP.playerColors[player] = color
+end
+
+function BoxESP.Toggle(state)
+	BoxESP.enabled = state
+	
+	for _, data in next, BoxESP.espData do
+		data.box.Visible = BoxESP.enabled
+	end
+end
+
+function BoxESP.DrawESP(target)
+	if target == clientPlayer then return end
+	
+	local character = target.Character or target.CharacterAdded:Wait()
+	if not character then return end
+
+	local humanoid = character:WaitForChild("Humanoid")
+	
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	if not rootPart then return end
+
+	local box = DrawBox()
+	BoxESP.espData[target] = {character = character, humanoid = humanoid, rootPart = rootPart, box = box}
+end
+
+local function RemoveESP(target)
+	local data = BoxESP.espData[target]
+	
+	if data then
+		if data.box then data.box:Remove() end
+		
+		BoxESP.espData[target] = nil
+	end
+end
+
+runService.RenderStepped:Connect(function()
+	if not BoxESP.enabled then return end
+
+	for player, data in next, BoxESP.espData do
+		if not data.humanoid.Parent or data.humanoid.Health <= 0 then
+			RemoveESP(player)
+		else
+			local color = BoxESP.playerColors[player] or BoxESP.defaultColor
+			if BoxESP.rainbowEnabled then
+				color = Color3.fromHSV(tick() % 1,1,1)
+			end
+			
+			data.box.Color = color
+			
+			local topPosition, onTop = camera:WorldToViewportPoint(data.rootPart.Position + Vector3.new(0, data.humanoid.HipHeight + 2, 0))
+			local bottomPosition, onBottom = camera:WorldToViewportPoint(data.rootPart.Position - Vector3.new(0, data.humanoid.HipHeight, 0))
+
+			if onTop and onBottom then
+				data.box.Position = Vector2.new(topPosition.X - 50 / 2, topPosition.Y)
+				data.box.Size = Vector2.new((topPosition.Y - bottomPosition.Y), (topPosition.Y - bottomPosition.Y))
+				data.box.Visible = true
+			else
+				data.box.Visible = false
+			end
+		end
+	end
+end)
+
+playerService.PlayerRemoving:Connect(RemoveESP)
+
+for _, player in next, playerService:GetPlayers() do
+	BoxESP.DrawESP(player)
+end
+playerService.PlayerAdded:Connect(BoxESP.DrawESP)
+
+return BoxESP
