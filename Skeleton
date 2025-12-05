@@ -60,6 +60,15 @@ local function RemoveESP(target)
 		
 		SkeletonESP.espData[target] = nil
 	end
+	
+end
+
+local function CleanupESP()
+	for player, data in next, SkeletonESP.espData do
+		if not player or not player.Parent then
+			RemoveESP(player)
+		end
+	end
 end
 
 function SkeletonESP.SetColor(player, color)
@@ -84,7 +93,10 @@ function SkeletonESP.DrawESP(target)
 end
 
 runService.RenderStepped:Connect(function()
-	if not SkeletonESP.enabled then return end
+	if not SkeletonESP.enabled then 
+		CleanupESP()
+		return 
+	end
 
 	for player, data in next, SkeletonESP.espData do
 		if not data.humanoid.Parent or data.humanoid.Health <= 0 then
