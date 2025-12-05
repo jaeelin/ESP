@@ -6,7 +6,7 @@ local clientPlayer = playerService.LocalPlayer
 local camera = workspace.CurrentCamera
 
 local BoxESP = {}
-BoxESP.version = 1.2
+BoxESP.version = 1.3
 BoxESP.espData = {}
 BoxESP.enabled = false
 BoxESP.defaultColor = Color3.fromRGB(255, 0, 0)
@@ -86,7 +86,7 @@ runService.RenderStepped:Connect(function()
 			end
 			
 			local dist = (camera.CFrame.Position - rootPos).Magnitude
-			local scale = math.clamp(1 / (dist / 50), 0.5, 1.5)
+			local scale = math.clamp(1 / (dist / 50), 0, 3)
 			local targetSize = Vector2.new(50, 100) * scale
 			
 			local targetPos = Vector2.new(
@@ -108,6 +108,36 @@ playerService.PlayerRemoving:Connect(RemoveESP)
 for _, player in next, playerService:GetPlayers() do
 	BoxESP.DrawESP(player)
 end
+
 playerService.PlayerAdded:Connect(BoxESP.DrawESP)
+
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+	Title = "unnamed hub",
+	SubTitle = "by asc5ndant",
+	TabWidth = 160,
+	Size = UDim2.fromOffset(580, 460),
+	Acrylic = true,
+	Theme = "Darker",
+	MinimizeKey = Enum.KeyCode.LeftShift
+})
+
+local Tabs = {
+	Main = Window:AddTab({ Title = "Main", Icon = "home" })
+}
+
+local Options = Fluent.Options
+
+Tabs.Main:AddToggle("Box ESP", {
+	Title = "Box ESP",
+	Description = "Enables box ESP for players.",
+	Default = false,
+	Callback = function(state)
+		BoxESP.Toggle(state)
+	end
+})
 
 return BoxESP
