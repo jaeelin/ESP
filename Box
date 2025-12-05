@@ -79,10 +79,15 @@ runService.RenderStepped:Connect(function()
 			local bottomPosition, onBottom = camera:WorldToViewportPoint(data.rootPart.Position - Vector3.new(0, data.humanoid.HipHeight, 0))
 
 			if onTop and onBottom then
-				local height = topPosition.Y - bottomPosition.Y
-				local width = height / 2
+				local height = bottomPosition.Y - topPosition.Y
 
-				data.box.Position = Vector2.new(topPosition.X - width / 2, topPosition.Y)
+				local rightVector = data.rootPart.CFrame.RightVector * 1.5
+				local rightPosition, onRight = camera:WorldToViewportPoint(data.rootPart.Position + rightVector)
+
+				local halfWidth = math.abs(rightPosition.X - topPosition.X)
+				local width = math.abs(rightPosition.X - topPosition.X) * 2
+
+				data.box.Position = Vector2.new(topPosition.X - halfWidth, topPosition.Y)
 				data.box.Size = Vector2.new(width, height)
 				data.box.Visible = true
 			else
