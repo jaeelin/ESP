@@ -111,33 +111,4 @@ end
 
 playerService.PlayerAdded:Connect(BoxESP.DrawESP)
 
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
-
-local Window = Fluent:CreateWindow({
-	Title = "unnamed hub",
-	SubTitle = "by asc5ndant",
-	TabWidth = 160,
-	Size = UDim2.fromOffset(580, 460),
-	Acrylic = true,
-	Theme = "Darker",
-	MinimizeKey = Enum.KeyCode.LeftShift
-})
-
-local Tabs = {
-	Main = Window:AddTab({ Title = "Main", Icon = "home" })
-}
-
-local Options = Fluent.Options
-
-Tabs.Main:AddToggle("Box ESP", {
-	Title = "Box ESP",
-	Description = "Enables box ESP for players.",
-	Default = false,
-	Callback = function(state)
-		BoxESP.Toggle(state)
-	end
-})
-
 return BoxESP
