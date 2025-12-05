@@ -8,7 +8,7 @@ local camera = workspace.CurrentCamera
 
 local SkeletonESP = {}
 SkeletonESP.espData = {}
-SkeletonESP.enabled = true
+SkeletonESP.enabled = false
 SkeletonESP.defaultColor = Color3.fromRGB(255, 0, 0)
 SkeletonESP.rainbowEnabled = false
 SkeletonESP.playerColors = {} 
