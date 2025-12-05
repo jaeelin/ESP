@@ -7,7 +7,7 @@ local clientPlayer = playerService.LocalPlayer
 local camera = workspace.CurrentCamera
 
 local SkeletonESP = {}
-SkeletonESP.version = 1.0
+SkeletonESP.version = 1.1
 SkeletonESP.espData = {}
 SkeletonESP.enabled = false
 SkeletonESP.defaultColor = Color3.fromRGB(255, 0, 0)
@@ -104,7 +104,7 @@ runService.RenderStepped:Connect(function()
 		else
 			local color = SkeletonESP.playerColors[player] or SkeletonESP.defaultColor
 			if SkeletonESP.rainbowEnabled then
-				color = Color3.fromHSV(tick() % 1, 1, 1)
+				color = Color3.fromHSV((tick() / 3) % 1, 1, 1)
 			end
 
 			for _, joint in next, data.joints do
