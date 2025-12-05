@@ -70,17 +70,20 @@ runService.RenderStepped:Connect(function()
 		else
 			local color = BoxESP.playerColors[player] or BoxESP.defaultColor
 			if BoxESP.rainbowEnabled then
-				color = Color3.fromHSV(tick() % 1,1,1)
+				color = Color3.fromHSV(tick() % 1, 1, 1)
 			end
-			
+
 			data.box.Color = color
 			
 			local topPosition, onTop = camera:WorldToViewportPoint(data.rootPart.Position + Vector3.new(0, data.humanoid.HipHeight + 2, 0))
 			local bottomPosition, onBottom = camera:WorldToViewportPoint(data.rootPart.Position - Vector3.new(0, data.humanoid.HipHeight, 0))
 
 			if onTop and onBottom then
-				data.box.Position = Vector2.new(topPosition.X - 50 / 2, topPosition.Y)
-				data.box.Size = Vector2.new((topPosition.Y - bottomPosition.Y), (topPosition.Y - bottomPosition.Y))
+				local height = topPosition.Y - bottomPosition.Y
+				local width = height / 2
+
+				data.box.Position = Vector2.new(topPosition.X - width / 2, topPosition.Y)
+				data.box.Size = Vector2.new(width, height)
 				data.box.Visible = true
 			else
 				data.box.Visible = false
