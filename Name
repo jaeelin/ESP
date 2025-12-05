@@ -1,0 +1,109 @@
+local playerService = game:GetService("Players")
+local runService = game:GetService("RunService")
+
+local clientPlayer = playerService.LocalPlayer
+local camera = workspace.CurrentCamera
+
+local NameESP = {}
+NameESP.version = 1.0
+NameESP.espData = {}
+NameESP.enabled = false
+NameESP.defaultColor = Color3.fromRGB(255, 0, 0)
+NameESP.rainbowEnabled = false
+NameESP.playerColors = {}
+
+local function DrawName()
+	local text = Drawing.new("Text")
+	
+	text.Visible = false
+	text.Color = Color3.fromRGB(255, 0, 0)
+	text.Size = 16
+	text.Center = true
+	text.Outline = true
+	if Drawing.Fonts then text.Font = Drawing.Fonts.Monospace end
+	
+	return text
+end
+
+function NameESP.SetColor(player, color)
+	NameESP.playerColors[player] = color
+end
+
+function NameESP.Toggle(state)
+	NameESP.enabled = state
+	for _, data in next, NameESP.espData do
+		data.name.Visible = NameESP.enabled
+	end
+end
+
+function NameESP.DrawESP(target)
+	if target == clientPlayer then return end
+
+	local character = target.Character or target.CharacterAdded:Wait()
+	if not character then return end
+
+	local humanoid = character:WaitForChild("Humanoid")
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	if not rootPart then return end
+
+	local nameLabel = DrawName()
+	nameLabel.Text = target.Name
+
+	NameESP.espData[target] = {character = character, humanoid = humanoid, rootPart = rootPart, name = nameLabel}
+end
+
+local function RemoveESP(target)
+	local data = NameESP.espData[target]
+	
+	if data then
+		if data.name then data.name:Remove() end
+		NameESP.espData[target] = nil
+	end
+end
+
+runService.RenderStepped:Connect(function()
+	if not NameESP.enabled then
+		for _, data in next, NameESP.espData do
+			if data.name then
+				data.name.Visible = false
+			end
+		end
+
+		return
+	end
+
+	for player, data in next, NameESP.espData do
+		if not data.humanoid.Parent or data.humanoid.Health <= 0 then
+			RemoveESP(player)
+		else
+			local rootPos = data.rootPart.Position + Vector3.new(0, 3, 0)
+			local screenPos, onScreen = camera:WorldToViewportPoint(rootPos)
+			local dist = (camera.CFrame.Position - rootPos).Magnitude
+
+			local color = NameESP.playerColors[player] or NameESP.defaultColor
+			if NameESP.rainbowEnabled then
+				color = Color3.fromHSV(tick() % 1, 1, 1)
+			end
+
+			local targetPos = Vector2.new(screenPos.X, screenPos.Y)
+			data.name.Position = data.name.Position:Lerp(targetPos, 0.5)
+			data.name.Color = color
+			data.name.Visible = onScreen
+			
+			local baseSize = 18 
+			local scale = math.clamp(baseSize / (dist / 40), 10, baseSize)
+
+			data.name.Size = scale
+		end
+	end
+end)
+
+playerService.PlayerRemoving:Connect(RemoveESP)
+
+for _, player in next, playerService:GetPlayers() do
+	NameESP.DrawESP(player)
+end
+
+playerService.PlayerAdded:Connect(NameESP.DrawESP)
+
+return NameESP
