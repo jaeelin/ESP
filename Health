@@ -1,0 +1,112 @@
+local playerService = game:GetService("Players")
+local runService = game:GetService("RunService")
+
+local clientPlayer = playerService.LocalPlayer
+local camera = workspace.CurrentCamera
+
+local HealthESP = {}
+HealthESP.version = 1.0
+HealthESP.espData = {}
+HealthESP.enabled = false
+HealthESP.defaultColor = Color3.fromRGB(0, 255, 0)
+HealthESP.rainbowEnabled = false
+HealthESP.playerColors = {}
+
+local function DrawHealthBar()
+	local bar = Drawing.new("Square")
+	
+	bar.Visible = false
+	bar.Filled = true
+	bar.Thickness = 1
+	bar.Transparency = 1
+	
+	return bar
+end
+
+function HealthESP.SetColor(player, color)
+	HealthESP.playerColors[player] = color
+end
+
+function HealthESP.Toggle(state)
+	HealthESP.enabled = state
+	for _, data in next, HealthESP.espData do
+		data.bar.Visible = HealthESP.enabled
+	end
+end
+
+function HealthESP.DrawESP(target, boxData)
+	if target == clientPlayer then return end
+
+	local character = target.Character or target.CharacterAdded:Wait()
+	if not character then return end
+
+	local humanoid = character:WaitForChild("Humanoid")
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	if not rootPart then return end
+
+	local bar = DrawHealthBar()
+	HealthESP.espData[target] = {character = character, humanoid = humanoid, rootPart = rootPart, bar = bar, boxData = boxData}
+end
+
+local function RemoveESP(target)
+	local data = HealthESP.espData[target]
+	
+	if data then
+		if data.bar then data.bar:Remove() end
+		
+		HealthESP.espData[target] = nil
+	end
+end
+
+runService.RenderStepped:Connect(function()
+	if not HealthESP.enabled then
+		for _, data in next, HealthESP.espData do
+			if data.bar then data.bar.Visible = false end
+		end
+		
+		return
+	end
+
+	for player, data in next, HealthESP.espData do
+		if not data.humanoid.Parent or data.humanoid.Health <= 0 then
+			RemoveESP(player)
+		else
+			local rootPosition = data.rootPart.Position
+			local screenPosition, onScreen = camera:WorldToViewportPoint(rootPosition)
+			if not onScreen then
+				data.bar.Visible = false
+				continue
+			end
+
+			local healthPercent = math.clamp(data.humanoid.Health / data.humanoid.MaxHealth, 0, 1)
+			
+			local color = HealthESP.playerColors[player] or HealthESP.defaultColor
+			if HealthESP.rainbowEnabled then
+				color = Color3.fromHSV((tick() / 5) % 1, 1, 1)
+			else
+				color = Color3.fromRGB(255 * (1 - healthPercent), 255 * healthPercent, 0)
+			end
+
+			local barWidth = 3
+			local barHeight = 100
+			
+			local barX = screenPosition.X + 20
+			local barY = screenPosition.Y - barHeight / 2
+
+			data.bar.Position = Vector2.new(barX, barY + (1 - healthPercent) * barHeight)
+			data.bar.Size = Vector2.new(barWidth, barHeight * healthPercent)
+			data.bar.Color = color
+			data.bar.Visible = true
+		end
+	end
+end)
+
+playerService.PlayerRemoving:Connect(RemoveESP)
+
+for _, player in next, playerService:GetPlayers() do
+	HealthESP.DrawESP(player)
+end
+
+playerService.PlayerAdded:Connect(HealthESP.DrawESP)
+
+return HealthESP
