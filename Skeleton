@@ -6,8 +6,6 @@ local player = playerService.LocalPlayer
 
 local camera = workspace.CurrentCamera
 
-local espData = {}
-
 local SkeletonESP = {}
 SkeletonESP.espData = {}
 SkeletonESP.enabled = true
@@ -26,11 +24,11 @@ local function DrawLine()
 end
 
 local function ToggleESP(state)
-	enabled = state
+	SkeletonESP.enabled = state
 	
-	for _, data in next, espData do
+	for _, data in next, SkeletonESP.espData do
 		for _, line in next, data.lines do
-			line.Visible = enabled
+			line.Visible = SkeletonESP.enabled
 		end
 	end
 end
@@ -53,14 +51,14 @@ local function GetJoints(character)
 end
 
 local function RemoveESP(target)
-	local data = espData[target]
+	local data = SkeletonESP.espData[target]
 	
 	if data then
 		for _, line in next, data.lines do
 			line:Remove()
 		end
 		
-		espData[target] = nil
+		SkeletonESP.espData[target] = nil
 	end
 end
 
@@ -82,7 +80,7 @@ function SkeletonESP.DrawESP(target)
 		lines[i] = DrawLine()
 	end
 
-	espData[target] = {character = character, humanoid = humanoid, joints = joints, lines = lines}
+	SkeletonESP.espData[target] = {character = character, humanoid = humanoid, joints = joints, lines = lines}
 end
 
 runService.RenderStepped:Connect(function()
